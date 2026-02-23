@@ -4,33 +4,59 @@ import os
 
 FILENAME = "contacts.json"
 
-# 1. Funkcija, kas ielādē esošos kontaktus
+# 1. Funkcija ielādēšanai
 def load_contacts():
     if not os.path.exists(FILENAME):
-        return [] # Ja faila nav, atdodam tukšu sarakstu
+        return []
     with open(FILENAME, "r", encoding="utf-8") as f:
-        return json.load(f) # Nolasa datus no faila
+        return json.load(f)
 
-# 2. Funkcija, kas saglabā visus kontaktus
+# 2. Funkcija saglabāšanai
 def save_contacts(contacts):
     with open(FILENAME, "w", encoding="utf-8") as f:
-        json.dump(contacts, f, indent=4) # Ieraksta ar atkāpēm, lai smuki
+        json.dump(contacts, f, indent=4, ensure_ascii=False)
 
-# 3. Galvenā loģika komandu apstrāde
+# 3. Funkcija visu kontaktu parādīšanai (list)
+def list_contacts():
+    contacts = load_contacts()
+    if not contacts:
+        print("Kontaktu saraksts ir tukšs.")
+        return
+    print("Kontakti:")
+    for i, c in enumerate(contacts, 1):
+        print(f"{i}. {c['name']} — {c['phone']}")
+
+# 4. Funkcija meklēšanai (search)
+def search_contacts(query):
+    contacts = load_contacts()
+    # Atrod visus, kuru vārdā ir meklētais teksts
+    found = [c for c in contacts if query.lower() in c['name'].lower()]
+    
+    if found:
+        print(f"Atrasti {len(found)} kontakti:")
+        for i, c in enumerate(found, 1):
+            print(f"{i}. {c['name']} — {c['phone']}")
+    else:
+        print(f"Kontakti ar vārdu '{query}' netika atrasti.")
+
+# --- Galvenā loģika komandu apstrādei ---
 if len(sys.argv) > 1:
     command = sys.argv[1]
 
     if command == "add":
-        # Ielādējam to, kas jau ir failā
         contacts = load_contacts()
+        name = sys.argv[2]
+        phone = sys.argv[3]
         
-        # Izveidojam jaunu kontaktu no termināļa datiem
-        new_contact = {
-            "name": sys.argv[2],
-            "phone": sys.argv[3]
-        }
-        
-        # Pieliekam klāt sarakstam un saglabājam
-        contacts.append(new_contact)
+        contacts.append({"name": name, "phone": phone})
         save_contacts(contacts)
-        print(f"Kontakts {sys.argv[2]} pievienots!")
+        print(f"✓ Pievienots: {name} ({phone})")
+
+    elif command == "list":
+        list_contacts()
+
+    elif command == "search":
+        if len(sys.argv) > 2:
+            search_contacts(sys.argv[2])
+        else:
+            print("Lūdzu, norādi meklējamo vārdu!")
